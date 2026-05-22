@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import  MachineList  from './components/MachineList'
+import reactLogo from '../assets/icons/react.svg'
+import viteLogo from '../assets/icons/vite.svg'
+import heroImg from '../assets/images/hero.png' 
+import  MachineList  from '../features/machines/components/MachineList'
 import './App.css'
+import MachineStatus from '../features/machines/components/MachineStatus'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -12,7 +13,9 @@ function App() {
     <>
     <div id='page'>
       <section id='center-section'>
-          <div id="center">
+      <div id="center">
+        <MachineStatus />
+        {/*           
             <div className="hero">
               <img src={heroImg} className="base" width="170" height="179" alt="" />
               <img src={reactLogo} className="framework" alt="React logo" />
@@ -30,8 +33,9 @@ function App() {
               onClick={() => setCount((count) => count + 1)}
             >
               Count is {count}
-            </button>
-          </div>
+            </button> */}
+      </div>
+          
           <div className="ticks"></div>
 
         <section id="next-steps">
@@ -117,7 +121,7 @@ function App() {
 
         <div className="ticks"></div>
         <section id="spacer"></section>
-      </section>
+    </section>
 
       <section id='right-section'>
         <MachineList />

@@ -63,3 +63,6 @@ Message Broker
      | Deliver events
      v
 Event Consumers
+
+
+Created by Luigi Cavalieri as a study and portfolio project focused on fullstack development, AWS cloud architecture, and event-driven microservices.
