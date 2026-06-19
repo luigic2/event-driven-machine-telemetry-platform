@@ -1,11 +1,7 @@
-// import { useState } from 'react'
-import reactLogo from '../assets/icons/react.svg'
-import viteLogo from '../assets/icons/vite.svg'
-// import heroImg from '../assets/images/hero.png' 
 import  MachineList  from '../features/machines/components/MachineList'
 import './App.css'
 import MachineStatus from '../features/machines/components/MachineStatus'
-
+import Greeting from '../features/machines/components/Greeting'
 function App() {
   // const [count, setCount] = useState(0)
 
@@ -14,6 +10,7 @@ function App() {
     <div id='page'>
       <section id='center-section'>
       <div id="center">
+        <Greeting name="John" />
         <MachineStatus />
         {/*           
             <div className="hero">
