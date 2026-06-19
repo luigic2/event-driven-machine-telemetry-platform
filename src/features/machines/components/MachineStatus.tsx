@@ -1,6 +1,5 @@
 import './MachineStatus.css';
-import { Button } from '@/shared/components/Button'
-
+import { Button } from '@shared/components/Button/Button';   
 export default function MachineStatus() {
     return(
         
