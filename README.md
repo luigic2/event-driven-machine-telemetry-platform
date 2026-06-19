@@ -21,7 +21,7 @@ backlog at its own pace.
 
 ## Architecture
 
-\```mermaid
+```mermaid
 flowchart LR
     S[Sensors] -->|POST /readings| API[API Node + TypeScript]
     API -->|enqueue| Q[(SQS Queue)]
@@ -29,7 +29,7 @@ flowchart LR
     W -->|persist processed| DB[(PostgreSQL)]
     API -->|hot readings| R[(Redis cache)]
     API -.->|query| DB
-\```
+```
 
 ## Tech Stack
 
@@ -39,40 +39,49 @@ flowchart LR
 | Messaging | AWS SQS (LocalStack in dev) |
 | Persistence | PostgreSQL · Redis |
 | Frontend (client/demo) | React · Vite · TypeScript |
-| Testing | Vitest · Supertest · Playwright |
+| Testing | Vitest · React Testing Library · MSW · Playwright |
 | Infrastructure | Docker · docker-compose · GitHub Actions |
 
 ## Getting Started
 **Prerequisites:** Node 20+, Docker.
 
-\```bash
+```bash
 git clone https://github.com/OWNER/REPO.git
 cd REPO
 cp .env.example .env
 npm install
 docker compose up -d
 npm run dev
-\```
+```
 
 ## Testing
-This project follows **TDD** — tests are written before implementation.
+This project is built with **TDD** — every piece is driven by a failing test first
+(red → green → refactor).
 
-\```bash
-npm run test             # unit tests (business rules)
-npm run test:integration # endpoints + test database
-npm run test:e2e         # full flow (Playwright)
-\```
+| Level | Tooling | Status |
+|---|---|---|
+| Unit / Component | Vitest · React Testing Library | 🚧 in progress |
+| API mocking | MSW (network-level) | 🚧 in progress |
+| Integration | Vitest · `fastify.inject()` · Testcontainers | ⬜ planned (with the backend) |
+| E2E | Playwright | ⬜ planned |
+
+```bash
+npm run test            # unit/component tests (watch mode)
+npm run test -- --run   # single run (CI)
+npm run coverage        # coverage report
+```
 
 Test pyramid: many unit · some integration · few E2E.
 
 ## Status & Roadmap
 > Honesty over hype. ✅ done · 🚧 in progress · ⬜ planned
 
-- ✅ Frontend base + contract/types layer
-- 🚧 REST ingestion API (`POST /readings`) + query endpoints
+- ✅ Frontend base + project tooling (lint, format)
+- 🚧 Contract/types layer + frontend tests (Vitest + RTL + MSW)
+- ⬜ REST ingestion API (`POST /readings`) + query endpoints
 - ⬜ SQS queue + decoupled worker
 - ⬜ Redis cache for hot readings
-- ⬜ Tests across all three levels + green CI
+- ⬜ Integration + E2E tests + green CI
 - ⬜ AWS deployment (ECR + Fargate + RDS + SQS)
 - ⬜ _Stretch:_ Terraform · OpenTelemetry
 
@@ -83,7 +92,7 @@ Test pyramid: many unit · some integration · few E2E.
 | Node.js + TypeScript | End-to-end typed REST API |
 | Scalable distributed systems | Ingestion decoupled via queue + worker |
 | AWS | ECR · Fargate · RDS · SQS (LocalStack in dev) |
-| Testing (unit/integration/E2E) | Vitest · Supertest · Playwright |
+| Testing (unit/integration/E2E) | Vitest (unit/integration) · Playwright (E2E) |
 | CI/CD | GitHub Actions (lint + test + deploy) |
 | _Nice to have:_ IaC / Observability | Terraform · OpenTelemetry (stretch) |
 
