@@ -10,7 +10,6 @@ export default function MachineStatus() {
                 <p>Current status: Running</p>
                 <p>Last Maintenance: 2023-10-15</p>
                 <p>Alerts: None</p>
-                <button>More Details</button>
                 <Button onClick={() => alert('More details clicked!')}>More Details</Button> 
             </div>
         </div>
