@@ -1,68 +1,96 @@
 # Event-Driven Machine Telemetry Platform
 
-A fullstack machine telemetry monitoring platform built with **React**, **Node.js**, **TypeScript**, and **AWS-oriented architecture**, designed to explore event-driven communication between decoupled services.
+> Ingestion and processing of telemetry from a fleet of agricultural machines
+> (tractors, harvesters), with ingestion decoupled from processing through a queue —
+> to absorb traffic spikes and scale horizontally.
 
-This project simulates a simplified industrial/fleet monitoring environment where machines send telemetry data, backend services process events asynchronously, maintenance alerts are generated automatically, and the frontend displays operational information in a dashboard.
+![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage--%25-informational)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-The main goal of this project is to practice modern software engineering concepts such as **microservices**, **Backend-for-Frontend (BFF)**, **event-driven architecture**, **message brokers**, **AWS services**, **CI/CD**, **testing**, and **observability**.
-
----
-
-## Project Status
-
-This project is currently under development.
-
-The initial focus is to build the core fullstack flow locally, then gradually evolve the system with AWS services, infrastructure as code, automated tests, and observability.
+🔗 **Live demo:** _(coming soon — Day 10)_ · 🎥 **Walkthrough (3 min):** _(coming soon — Day 13)_
 
 ---
 
-## Main Goals
+## Problem
+A fleet of agricultural machines emits thousands of sensor readings (fuel,
+temperature, RPM) in bursts. Handling this synchronously does not scale: a spike
+can take the API down. This project separates **ingestion** from **processing**
+using a queue, so the API stays responsive under load while a worker consumes the
+backlog at its own pace.
 
-This project was created to study and demonstrate:
+## Architecture
 
--Fullstack application development with React and Node.js
--Type-safe backend and frontend development using TypeScript
--Backend-for-Frontend architecture
--Microservices communication patterns
--Synchronous communication using HTTP APIs
--Asynchronous communication using event-driven architecture
--Message broker concepts using AWS services such as SQS, SNS, and EventBridge
--Machine telemetry processing
--Maintenance alert generation
--Real-time dashboard updates
--CI/CD pipelines with GitHub Actions
--AWS cloud architecture fundamentals
--Infrastructure as Code with Terraform
--Observability with CloudWatch, OpenTelemetry, and New Relic concepts
+\```mermaid
+flowchart LR
+    S[Sensors] -->|POST /readings| API[API Node + TypeScript]
+    API -->|enqueue| Q[(SQS Queue)]
+    Q --> W[Worker]
+    W -->|persist processed| DB[(PostgreSQL)]
+    API -->|hot readings| R[(Redis cache)]
+    API -.->|query| DB
+\```
 
+## Tech Stack
 
+| Layer | Technology |
+|---|---|
+| API | Node 20 · TypeScript · Fastify · Zod |
+| Messaging | AWS SQS (LocalStack in dev) |
+| Persistence | PostgreSQL · Redis |
+| Frontend (client/demo) | React · Vite · TypeScript |
+| Testing | Vitest · Supertest · Playwright |
+| Infrastructure | Docker · docker-compose · GitHub Actions |
+
+## Getting Started
+**Prerequisites:** Node 20+, Docker.
+
+\```bash
+git clone https://github.com/OWNER/REPO.git
+cd REPO
+cp .env.example .env
+npm install
+docker compose up -d
+npm run dev
+\```
+
+## Testing
+This project follows **TDD** — tests are written before implementation.
+
+\```bash
+npm run test             # unit tests (business rules)
+npm run test:integration # endpoints + test database
+npm run test:e2e         # full flow (Playwright)
+\```
+
+Test pyramid: many unit · some integration · few E2E.
+
+## Status & Roadmap
+> Honesty over hype. ✅ done · 🚧 in progress · ⬜ planned
+
+- ✅ Frontend base + contract/types layer
+- 🚧 REST ingestion API (`POST /readings`) + query endpoints
+- ⬜ SQS queue + decoupled worker
+- ⬜ Redis cache for hot readings
+- ⬜ Tests across all three levels + green CI
+- ⬜ AWS deployment (ECR + Fargate + RDS + SQS)
+- ⬜ _Stretch:_ Terraform · OpenTelemetry
+
+## Requirements Coverage
+
+| Job requirement | Where this project proves it |
+|---|---|
+| Node.js + TypeScript | End-to-end typed REST API |
+| Scalable distributed systems | Ingestion decoupled via queue + worker |
+| AWS | ECR · Fargate · RDS · SQS (LocalStack in dev) |
+| Testing (unit/integration/E2E) | Vitest · Supertest · Playwright |
+| CI/CD | GitHub Actions (lint + test + deploy) |
+| _Nice to have:_ IaC / Observability | Terraform · OpenTelemetry (stretch) |
+
+## Technical Decisions
+Decisions are recorded in [`/docs/adr/`](docs/adr) — e.g. _why a queue instead of
+synchronous processing_, _why ingestion is separated from processing_.
 
 ---
-
-## Architecture overview
-
-The application is designed around a decoupled service architecture.
-
-The frontend communicates with a BFF layer, which is responsible for adapting and aggregating data for the user interface. Backend services communicate synchronously when immediate responses are required and asynchronously through events when services need to react to business changes without direct coupling.
-
-
-React Frontend
-     |
-     | HTTP Request
-     v
-Backend-for-Frontend (BFF)
-     |
-     | Synchronous HTTP calls
-     v
-Microservices
-     |
-     | Publish domain events
-     v
-Message Broker
-     |
-     | Deliver events
-     v
-Event Consumers
-
-
-Created by Luigi Cavalieri as a study and portfolio project focused on fullstack development, AWS cloud architecture, and event-driven microservices.
+_Portfolio project by Luigi Cavalieri — software engineering, event-driven
+architecture, and AWS._
