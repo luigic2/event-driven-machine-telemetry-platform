@@ -22,7 +22,9 @@ export function useMachineDetail(
   const [data, setData] = useState<MachineDetailData | null>(null);
   const [status, setStatus] = useState<AsyncStatus | "idle">("idle");
   const [error, setError] = useState<Error | null>(null);
-  const [trackedId, setTrackedId] = useState<string | null>(machineId);
+  // Starts as null (nothing tracked yet) so a component mounted directly with a
+  // machineId still transitions through the loading state on its first render.
+  const [trackedId, setTrackedId] = useState<string | null>(null);
 
   // Reset synchronously when the selected machine changes, during render —
   // the React-recommended alternative to resetting state inside an effect.

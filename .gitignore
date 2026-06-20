@@ -32,3 +32,6 @@ documentacao-exemplo.md
 /playwright/.cache/
 /playwright/.auth/
 /coverage/
+
+# TypeScript incremental build info
+*.tsbuildinfo
