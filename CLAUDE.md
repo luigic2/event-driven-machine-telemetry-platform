@@ -31,7 +31,7 @@ AgriTelemetry is a backend service that **ingests, processes, stores, and serves
                                             [DLQ] (poison messages)
 ```
 
-**Why this shape:** the queue decouples ingestion from processing, which buys load-leveling under burst, failure isolation, and independent scaling. This is a **modular monolith**, not microservices — that was a deliberate decision (see Rule 2). The seams (queue, `event_id`, ingestion/worker split) are placed so that a service could be extracted later *if* a concrete pain appears.
+**Why this shape:** the queue decouples ingestion from processing, which buys load-leveling under burst, failure isolation, and independent scaling. This is a **modular monolith**, not microservices — that was a deliberate decision (see Rule 2). The seams (queue, `event_id`, ingestion/worker split) are placed so that a service could be extracted later _if_ a concrete pain appears.
 
 ---
 
@@ -63,7 +63,7 @@ If a task would require breaking one of these, **stop and surface it** (Rule 7).
 - **Logging:** pino (structured)
 - **Containers:** Docker + docker-compose
 - **CI/CD:** GitHub Actions (OIDC to assume AWS roles — no long-lived keys in the repo)
-- **Tests:** Vitest/Jest + Supertest + Testcontainers + Playwright (E2E)
+- **Tests:** Vitest + Testing-library Packages + Testcontainers + Playwright (E2E)
 - **Stretch:** Terraform (IaC), OpenTelemetry (distributed tracing)
 
 ---
@@ -130,6 +130,7 @@ Follow the pyramid: many unit, fewer integration, few E2E. Test **behavior, not 
 - **E2E** — full stack: the ingestion → processing → query path. Because it crosses the async boundary, **E2E assertions MUST poll with a timeout** until the data appears (`BR-DAT-04`) — never assert synchronously right after the 202.
 
 **Signature tests** (these alone prove the distributed-systems understanding — keep them green):
+
 - Send the **same `event_id` twice** → assert exactly **one** row exists. (idempotency)
 - Send a **poison message** → assert it lands in the **DLQ** without blocking the queue.
 
@@ -143,53 +144,53 @@ These rules apply to every task. Use them as an iterative loop, not strict seque
 
 **Rule 1 — Think Before Coding**
 State assumptions explicitly. Ask rather than guess. Push back when a simpler approach exists. Stop when you are confused.
-*In this project:* before writing domain code, identify the governing `BR-` rule and the invariant(s) in §3 it touches. If a change would break an invariant, stop and confirm before proceeding.
+_In this project:_ before writing domain code, identify the governing `BR-` rule and the invariant(s) in §3 it touches. If a change would break an invariant, stop and confirm before proceeding.
 
 **Rule 2 — Simplicity First**
 Write the minimum code that solves the problem. Do nothing speculative. Do not build abstractions for single-use code.
-*In this project:* we deliberately chose a modular monolith over microservices, and Postgres over a specialized time-series store, because the scope does not justify the cost. Do not add services, queues, caches, frameworks, or abstractions the current scope doesn't require. "Could scale later" is not a reason to build it now.
+_In this project:_ we deliberately chose a modular monolith over microservices, and Postgres over a specialized time-series store, because the scope does not justify the cost. Do not add services, queues, caches, frameworks, or abstractions the current scope doesn't require. "Could scale later" is not a reason to build it now.
 
 **Rule 3 — Surgical Changes**
 Touch only what you must. Do not improve adjacent code. Match the existing style exactly. Do not refactor what isn't broken.
-*In this project:* keep the layer boundaries (api / services / repositories / worker) intact; don't move logic across them opportunistically.
+_In this project:_ keep the layer boundaries (api / services / repositories / worker) intact; don't move logic across them opportunistically.
 
 ### Phase 2 — Execution
 
 **Rule 4 — Goal-Driven Execution**
 Define success criteria upfront. Loop until verified. Strong success criteria let the agent loop independently.
-*In this project:* for domain work, the success criterion is "the test that encodes the relevant `BR-` rule passes." Write or identify that test first.
+_In this project:_ for domain work, the success criterion is "the test that encodes the relevant `BR-` rule passes." Write or identify that test first.
 
 **Rule 5 — Judgment Over Guesswork**
 Use the model primarily for judgment calls (classification, summarization, extraction). If existing code or libraries can answer the question, do not invent custom logic.
-*In this project:* prefer the platform's guarantees over hand-rolled logic — a `UNIQUE` constraint for dedup, the AWS SDK v3 for SQS, `pg`/Drizzle for queries, Zod for validation. Do not reimplement what SQS or Postgres already guarantee.
+_In this project:_ prefer the platform's guarantees over hand-rolled logic — a `UNIQUE` constraint for dedup, the AWS SDK v3 for SQS, `pg`/Drizzle for queries, Zod for validation. Do not reimplement what SQS or Postgres already guarantee.
 
 **Rule 6 — Token Budget Discipline**
 Token budgets are strict boundaries. If a complex task approaches limits, summarize progress and ask for permission to start a fresh context rather than silently overflowing.
 
 **Rule 7 — Conflict Resolution**
 If two patterns contradict, pick one (e.g., the more recent or tested) and explain why. Surface the conflict instead of averaging them out.
-*In this project:* if a convenient fix conflicts with a §3 invariant, the invariant wins — surface the conflict, never quietly weaken the invariant to make a task pass.
+_In this project:_ if a convenient fix conflicts with a §3 invariant, the invariant wins — surface the conflict, never quietly weaken the invariant to make a task pass.
 
 **Rule 8 — Read Before You Write**
 Before adding code, read the module exports, immediate callers, and shared utilities to prevent duplicating efforts or breaking imports.
-*In this project:* read the relevant `repositories/` and `services/` modules and the `BR-` rule before adding domain code.
+_In this project:_ read the relevant `repositories/` and `services/` modules and the `BR-` rule before adding domain code.
 
 ### Phase 3 — Testing & Reporting
 
 **Rule 9 — Trust, But Verify**
 Write strong assertions. Just because a function returns without error does not mean it works correctly. Ensure side-effects and critical paths are explicitly tested.
-*In this project:* a `202` from the ingestion API does **not** mean the reading was persisted — persistence is async. Assert the side effect (the row exists, with the right anomaly flag) **after** the worker runs, using eventual-consistency polling.
+_In this project:_ a `202` from the ingestion API does **not** mean the reading was persisted — persistence is async. Assert the side effect (the row exists, with the right anomaly flag) **after** the worker runs, using eventual-consistency polling.
 
 **Rule 10 — Step-by-Step Recovery**
 When a multi-step refactor fails midway, halt. Do not complete steps 5 and 6 on top of a broken state from step 4. Report the failure immediately.
 
 **Rule 11 — Native Style Adherence**
 Respect language idioms. Do not introduce patterns from one ecosystem into another (e.g., no React hooks in standard JS class components).
-*In this project:* this is a plain Node/Fastify service — do not carry Next.js framework assumptions (API routes, SSR lifecycles) into it. Use Node/TS idioms; never block the event loop with sync I/O.
+_In this project:_ this is a plain Node/Fastify service — do not carry Next.js framework assumptions (API routes, SSR lifecycles) into it. Use Node/TS idioms; never block the event loop with sync I/O.
 
 **Rule 12 — Fail Loudly**
 "Completed" is unacceptable if anything was skipped silently. "Tests pass" is invalid if any were skipped. Default to surfacing uncertainty and skipped constraints, never hide them.
-*In this project:* never swallow a failed message — route it to the DLQ (`BR-PRC-03`). "Tests pass" is invalid if integration/E2E were skipped because LocalStack or the containers weren't running. Say what was skipped.
+_In this project:_ never swallow a failed message — route it to the DLQ (`BR-PRC-03`). "Tests pass" is invalid if integration/E2E were skipped because LocalStack or the containers weren't running. Say what was skipped.
 
 ---
 
