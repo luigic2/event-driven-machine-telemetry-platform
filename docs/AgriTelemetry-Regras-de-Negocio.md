@@ -13,23 +13,25 @@ O AgriTelemetry recebe leituras de sensores emitidas por máquinas agrícolas co
 O princípio que orienta todas as regras: **na agricultura, a indisponibilidade de uma máquina dentro da janela de plantio ou colheita tem custo desproporcional** — pode significar perda direta de safra. Por isso o sistema prioriza confiabilidade de ingestão, integridade dos dados e detecção precoce de anomalias acima de qualquer outra característica.
 
 ### Fora de escopo (decisão consciente)
-Predição por machine learning, streaming analítico em tempo real, faturamento, e gestão completa de notificações multicanal estão fora desta versão. O sistema *sinaliza* condições; a entrega de notificações externas é tratada como ponto de extensão.
+
+Predição por machine learning, streaming analítico em tempo real, faturamento, e gestão completa de notificações multicanal estão fora desta versão. O sistema _sinaliza_ condições; a entrega de notificações externas é tratada como ponto de extensão.
 
 ---
 
 ## 2. Glossário
 
-| Termo | Definição |
-|---|---|
-| **Máquina** | Ativo físico conectado que emite telemetria, unicamente identificado na frota. |
+| Termo                 | Definição                                                                                                |
+| --------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Máquina**           | Ativo físico conectado que emite telemetria, unicamente identificado na frota.                           |
 | **Organização (org)** | Entidade proprietária de um conjunto de máquinas e seus dados (fazenda, cooperativa, operador de frota). |
-| **Leitura (reading)** | Um valor de um sensor, num instante, vindo de uma máquina. |
-| **Evento** | A unidade de ingestão; carrega uma ou mais leituras e um identificador único de evento. |
-| **Anomalia** | Leitura que viola um limite operacional definido para seu tipo de sensor. |
-| **DTC** | Diagnostic Trouble Code — código de falha emitido pela máquina. |
-| **Horas de operação** | Contador monotônico de horas de motor (engine hours), análogo a um odômetro. |
+| **Leitura (reading)** | Um valor de um sensor, num instante, vindo de uma máquina.                                               |
+| **Evento**            | A unidade de ingestão; carrega uma ou mais leituras e um identificador único de evento.                  |
+| **Anomalia**          | Leitura que viola um limite operacional definido para seu tipo de sensor.                                |
+| **DTC**               | Diagnostic Trouble Code — código de falha emitido pela máquina.                                          |
+| **Horas de operação** | Contador monotônico de horas de motor (engine hours), análogo a um odômetro.                             |
 
 ### Convenções
+
 - **Severidade:** `INFO` < `WARNING` < `CRITICAL`. Toda anomalia carrega exatamente uma severidade.
 - **Estado da máquina:** `ATIVA`, `OCIOSA`, `OFFLINE`.
 - **Unidades canônicas:** temperatura °C, pressão hidráulica bar, nível de combustível/DEF %, tensão V, rotação rpm, velocidade km/h, horas h, volume de combustível L.
@@ -43,7 +45,7 @@ Predição por machine learning, streaming analítico em tempo real, faturamento
 - **BR-MAQ-01** — Toda máquina deve ser unicamente identificada por um `machine_id` imutável atribuído no cadastro. Um `machine_id` nunca é reutilizado, mesmo após desativação.
 - **BR-MAQ-02** — Toda máquina deve possuir, no mínimo: tipo (trator, colheitadeira, etc.), modelo, número de série e a organização proprietária.
 - **BR-MAQ-03** — Toda leitura recebida deve referenciar uma máquina previamente cadastrada. Leituras de máquinas desconhecidas são rejeitadas na ingestão (ver BR-ING-07).
-  - *Implicação técnica: integridade referencial entre leitura e máquina; é um teste de integração natural.*
+  - _Implicação técnica: integridade referencial entre leitura e máquina; é um teste de integração natural._
 - **BR-MAQ-04** — Uma máquina pode estar em um de três estados de ciclo de vida: `ATIVA_EM_CAMPO`, `EM_MANUTENCAO`, `DESATIVADA`. Máquinas `DESATIVADA` não aceitam novas leituras.
 - **BR-MAQ-05** — Uma máquina pertence a exatamente uma organização em um dado momento. A transferência de propriedade preserva o histórico de telemetria, mas o acesso ao histórico segue a regra de propriedade vigente (ver BR-SEG).
 
@@ -53,7 +55,7 @@ Predição por machine learning, streaming analítico em tempo real, faturamento
 
 - **BR-ORG-01** — Todo dado de telemetria pertence à organização proprietária da máquina que o gerou.
 - **BR-ORG-02** — Uma organização só pode acessar dados das máquinas que possui. Nenhuma consulta pode retornar dados de outra organização, em nenhuma circunstância.
-  - *Implicação: todo endpoint de leitura filtra obrigatoriamente por organização; ausência desse filtro é um defeito de segurança crítico.*
+  - _Implicação: todo endpoint de leitura filtra obrigatoriamente por organização; ausência desse filtro é um defeito de segurança crítico._
 - **BR-ORG-03** — Operações de agregação (médias, totais da frota) são calculadas estritamente dentro da fronteira da organização.
 
 ---
@@ -65,13 +67,13 @@ Predição por machine learning, streaming analítico em tempo real, faturamento
 - **BR-ING-03** — `value` deve ser numérico e estar dentro da faixa fisicamente plausível do tipo de sensor (ver Apêndice A). Valores fora da faixa plausível são tratados como dados corrompidos e rejeitados — distinto de anomalia (ver nota abaixo).
 - **BR-ING-04** — `timestamp` não pode estar no futuro além de uma tolerância de relógio de **5 minutos**. Leituras com timestamp futuro além da tolerância são rejeitadas.
 - **BR-ING-05** — `timestamp` não pode ser mais antigo que a janela de aceitação de **48 horas**. Leituras mais antigas são rejeitadas como atrasadas em excesso, para impedir reprocessamento de backlogs corrompidos.
-  - *Rationale: redes rurais geram reenvios atrasados legítimos; 48h cobre o reenvio razoável sem abrir a porta para lixo histórico.*
+  - _Rationale: redes rurais geram reenvios atrasados legítimos; 48h cobre o reenvio razoável sem abrir a porta para lixo histórico._
 - **BR-ING-06** — A API de ingestão deve **aceitar e enfileirar** a leitura válida, respondendo `202 Accepted`, sem gravá-la sincronamente. Nenhuma regra de negócio de processamento é aplicada na borda de ingestão.
-  - *Rationale: desacoplamento, absorção de pico e baixa latência de resposta.*
+  - _Rationale: desacoplamento, absorção de pico e baixa latência de resposta._
 - **BR-ING-07** — Leituras rejeitadas por validação (BR-ING-01 a 05, BR-MAQ-03) não entram na fila de processamento e retornam erro de validação ao emissor, com a causa identificada.
 - **BR-ING-08** — A ingestão deve aceitar lotes (múltiplas leituras por requisição). A validação é por leitura: leituras válidas do lote são aceitas; inválidas são reportadas individualmente sem invalidar o lote inteiro.
 
-> **Distinção crítica — dado corrompido × anomalia:** um valor *fisicamente impossível* (ex.: temperatura de motor de 5000 °C) é **corrompido** e deve ser **rejeitado na ingestão**. Um valor *possível, porém perigoso* (ex.: 125 °C) é uma **anomalia válida** e deve ser **aceito e sinalizado**. Confundir os dois é um erro de modelagem grave: anomalia é justamente o dado que mais interessa preservar.
+> **Distinção crítica — dado corrompido × anomalia:** um valor _fisicamente impossível_ (ex.: temperatura de motor de 5000 °C) é **corrompido** e deve ser **rejeitado na ingestão**. Um valor _possível, porém perigoso_ (ex.: 125 °C) é uma **anomalia válida** e deve ser **aceito e sinalizado**. Confundir os dois é um erro de modelagem grave: anomalia é justamente o dado que mais interessa preservar.
 
 ---
 
@@ -79,7 +81,7 @@ Predição por machine learning, streaming analítico em tempo real, faturamento
 
 - **BR-IDE-01** — Cada evento carrega um `event_id` único, gerado na origem (máquina). O sistema usa o `event_id` como chave de deduplicação.
 - **BR-IDE-02** — Processar o mesmo `event_id` mais de uma vez deve produzir o mesmo resultado que processá-lo uma única vez. Nenhuma duplicata pode gerar registro duplicado.
-  - *Implicação: o sistema assume entrega "pelo menos uma vez" e garante idempotência na aplicação, via restrição de unicidade no `event_id` no armazenamento primário.*
+  - _Implicação: o sistema assume entrega "pelo menos uma vez" e garante idempotência na aplicação, via restrição de unicidade no `event_id` no armazenamento primário._
 - **BR-IDE-03** — A verificação de unicidade do `event_id` deve ser fortemente consistente (executada contra o armazenamento primário, nunca contra réplica de leitura ou cache), sob pena de uma duplicata escapar pela janela de defasagem.
 - **BR-IDE-04** — Uma leitura, uma vez persistida, é imutável. Correções se dão por nova leitura, nunca por alteração de registro histórico (telemetria é um log append-only).
 
@@ -89,7 +91,7 @@ Predição por machine learning, streaming analítico em tempo real, faturamento
 
 - **BR-PRC-01** — O processamento de leituras é assíncrono e desacoplado da ingestão, executado por um consumidor independente.
 - **BR-PRC-02** — Uma leitura só é considerada processada com sucesso após persistida no armazenamento durável. A confirmação (ack/delete da mensagem) só ocorre após a persistência.
-  - *Rationale: se o consumidor falhar antes de confirmar, a leitura é reentregue e reprocessada — protegida pela idempotência (BR-IDE-02).*
+  - _Rationale: se o consumidor falhar antes de confirmar, a leitura é reentregue e reprocessada — protegida pela idempotência (BR-IDE-02)._
 - **BR-PRC-03** — Mensagens que falham repetidamente no processamento (mensagens-veneno) devem ser desviadas para uma fila morta (DLQ) após um número máximo de tentativas, sem bloquear o fluxo das demais.
 - **BR-PRC-04** — O acúmulo de mensagens na DLQ deve ser observável e disparar alerta operacional, pois sinaliza falha sistêmica ou dado cronicamente malformado.
 - **BR-PRC-05** — A perda de uma leitura válida e aceita é inaceitável. Em caso de falha de processamento, a leitura deve ser retida (na fila ou na DLQ) até resolução, nunca descartada silenciosamente.
@@ -102,7 +104,7 @@ Predição por machine learning, streaming analítico em tempo real, faturamento
 - **BR-EST-02** — Uma máquina que não emite leituras há mais que a janela de atividade, porém há menos que **2 horas**, é considerada `OCIOSA`.
 - **BR-EST-03** — Uma máquina sem leituras há mais de **2 horas** durante período operacional é considerada `OFFLINE` e deve gerar sinalização, pois pode indicar falha de conectividade, defeito ou furto.
 - **BR-EST-04** — O sistema deve manter, para cada máquina, a leitura mais recente de cada tipo de sensor, acessível com baixa latência (estado atual da frota).
-  - *Implicação: candidato natural a cache de "estado quente" por máquina.*
+  - _Implicação: candidato natural a cache de "estado quente" por máquina._
 - **BR-EST-05** — A transição de estado (ex.: `ATIVA` → `OFFLINE`) é derivada do tempo desde a última leitura, não declarada pela máquina.
 
 ---
@@ -114,7 +116,7 @@ Predição por machine learning, streaming analítico em tempo real, faturamento
 - **BR-ANO-03** — A severidade segue a taxonomia: `WARNING` para desvio que exige atenção, `CRITICAL` para condição que exige ação imediata (risco de dano à máquina ou parada).
 - **BR-ANO-04** — Um código de falha (DTC) emitido pela máquina é sempre registrado como anomalia, com severidade mínima `WARNING`, mapeada conforme a criticidade do código.
 - **BR-ANO-05** — A avaliação de anomalia deve ser uma função pura e determinística da leitura e da configuração de limites vigente — mesma entrada, mesma saída.
-  - *Rationale: isso a torna a regra de negócio ideal para cobertura por testes unitários.*
+  - _Rationale: isso a torna a regra de negócio ideal para cobertura por testes unitários._
 - **BR-ANO-06** — A detecção de anomalia não pode bloquear nem atrasar a persistência da leitura. Sinalizar é parte do processamento, não um pré-requisito da gravação.
 
 ---
@@ -124,7 +126,7 @@ Predição por machine learning, streaming analítico em tempo real, faturamento
 - **BR-ALR-01** — Toda anomalia `CRITICAL` deve ser disponibilizada para alerta imediato à organização proprietária.
 - **BR-ALR-02** — Anomalias devem ser consultáveis por máquina, por organização, por severidade e por janela de tempo.
 - **BR-ALR-03** — Para evitar fadiga de alerta, anomalias repetidas e contínuas da mesma condição na mesma máquina devem ser agrupadas/suprimidas dentro de uma janela configurável, em vez de gerar um alerta por leitura.
-  - *Rationale: um motor superaquecido emite a condição a cada segundo; o operador precisa de um alerta, não de mil.*
+  - _Rationale: um motor superaquecido emite a condição a cada segundo; o operador precisa de um alerta, não de mil._
 - **BR-ALR-04** — A entrega externa de notificações (e-mail, SMS, push) é um ponto de extensão: cada canal/consumidor interessado recebe os eventos de anomalia de forma independente, sem acoplar-se ao processamento principal.
 
 ---
@@ -180,18 +182,18 @@ Predição por machine learning, streaming analítico em tempo real, faturamento
 
 > Os valores abaixo são padrões de referência; limites efetivos são configuráveis por tipo e por modelo (BR-ANO-02). "Faixa plausível" governa rejeição por corrupção (BR-ING-03); "warning/critical" governam anomalia (BR-ANO-01).
 
-| Tipo de sensor | Unidade | Faixa plausível | Warning | Critical |
-|---|---|---|---|---|
-| Temperatura do motor | °C | −40 a 200 | > 110 | > 120 |
-| Rotação do motor | rpm | 0 a 3500 | > 2600 | > 2900 |
-| Pressão do óleo | bar | 0 a 10 | < 1.0 | < 0.5 |
-| Pressão hidráulica | bar | 0 a 300 | fora de 150–250 | fora de 100–280 |
-| Nível de combustível | % | 0 a 100 | < 15 | < 5 |
-| Nível de DEF (Arla) | % | 0 a 100 | < 10 | < 3 |
-| Tensão da bateria | V | 0 a 16 | < 11.8 | < 11.0 |
-| Velocidade de deslocamento | km/h | 0 a 60 | — | — |
-| Horas de operação | h | 0 a 100000 | aproxima do intervalo | ultrapassa o intervalo |
-| Código de falha (DTC) | — | conjunto válido | qualquer DTC | DTC crítico |
+| Tipo de sensor             | Unidade | Faixa plausível | Warning               | Critical               |
+| -------------------------- | ------- | --------------- | --------------------- | ---------------------- |
+| Temperatura do motor       | °C      | −40 a 200       | > 110                 | > 120                  |
+| Rotação do motor           | rpm     | 0 a 3500        | > 2600                | > 2900                 |
+| Pressão do óleo            | bar     | 0 a 10          | < 1.0                 | < 0.5                  |
+| Pressão hidráulica         | bar     | 0 a 300         | fora de 150–250       | fora de 100–280        |
+| Nível de combustível       | %       | 0 a 100         | < 15                  | < 5                    |
+| Nível de DEF (Arla)        | %       | 0 a 100         | < 10                  | < 3                    |
+| Tensão da bateria          | V       | 0 a 16          | < 11.8                | < 11.0                 |
+| Velocidade de deslocamento | km/h    | 0 a 60          | —                     | —                      |
+| Horas de operação          | h       | 0 a 100000      | aproxima do intervalo | ultrapassa o intervalo |
+| Código de falha (DTC)      | —       | conjunto válido | qualquer DTC          | DTC crítico            |
 
 ---
 
@@ -203,6 +205,6 @@ Cada regra desta lista é, deliberadamente, **testável** — essa é a razão d
 - **Testes unitários:** regras de função pura — sobretudo BR-ANO (anomalia), BR-EST (derivação de estado), BR-MAN-02 (monotonicidade de horas), BR-ING-03/04/05 (validação) — mapeiam quase um-para-um para casos de teste.
 - **Testes de integração:** BR-MAQ-03 (integridade referencial), BR-IDE-02/03 (idempotência), BR-PRC-02 (persistência antes do ack).
 - **Testes E2E:** BR-DAT-04 (consistência eventual exige asserção com espera) e o caminho ingestão → processamento → consulta.
-- **Conversa de entrevista:** cada regra carrega um "porquê" de domínio. Saber recitar a *necessidade de negócio* por trás de uma decisão técnica é o que distingue quem modelou o domínio de quem apenas codou.
+- **Conversa de entrevista:** cada regra carrega um "porquê" de domínio. Saber recitar a _necessidade de negócio_ por trás de uma decisão técnica é o que distingue quem modelou o domínio de quem apenas codou.
 
-*Fim do documento.*
+_Fim do documento._

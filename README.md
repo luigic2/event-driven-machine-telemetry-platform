@@ -13,6 +13,7 @@
 ---
 
 ## Problem
+
 A fleet of agricultural machines emits thousands of sensor readings (fuel,
 temperature, RPM) in bursts. Handling this synchronously does not scale: a spike
 can take the API down. This project separates **ingestion** from **processing**
@@ -33,16 +34,17 @@ flowchart LR
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| API | Node 20 · TypeScript · Fastify · Zod |
-| Messaging | AWS SQS (LocalStack in dev) |
-| Persistence | PostgreSQL · Redis |
-| Frontend (client/demo) | React · Vite · TypeScript |
-| Testing | Vitest · React Testing Library · MSW · Playwright |
-| Infrastructure | Docker · docker-compose · GitHub Actions |
+| Layer                  | Technology                                        |
+| ---------------------- | ------------------------------------------------- |
+| API                    | Node 20 · TypeScript · Fastify · Zod              |
+| Messaging              | AWS SQS (LocalStack in dev)                       |
+| Persistence            | PostgreSQL · Redis                                |
+| Frontend (client/demo) | React · Vite · TypeScript                         |
+| Testing                | Vitest · React Testing Library · MSW · Playwright |
+| Infrastructure         | Docker · docker-compose · GitHub Actions          |
 
 ## Getting Started
+
 **Prerequisites:** Node 20+, Docker.
 
 ```bash
@@ -55,15 +57,16 @@ npm run dev
 ```
 
 ## Testing
+
 This project is built with **TDD** — every piece is driven by a failing test first
 (red → green → refactor).
 
-| Level | Tooling | Status |
-|---|---|---|
-| Unit / Component | Vitest · React Testing Library | 🚧 in progress |
-| API mocking | MSW (network-level) | 🚧 in progress |
-| Integration | Vitest · `fastify.inject()` · Testcontainers | ⬜ planned (with the backend) |
-| E2E | Playwright | ⬜ planned |
+| Level            | Tooling                                      | Status                        |
+| ---------------- | -------------------------------------------- | ----------------------------- |
+| Unit / Component | Vitest · React Testing Library               | 🚧 in progress                |
+| API mocking      | MSW (network-level)                          | 🚧 in progress                |
+| Integration      | Vitest · `fastify.inject()` · Testcontainers | ⬜ planned (with the backend) |
+| E2E              | Playwright                                   | ⬜ planned                    |
 
 ```bash
 npm run test            # unit/component tests (watch mode)
@@ -74,6 +77,7 @@ npm run coverage        # coverage report
 Test pyramid: many unit · some integration · few E2E.
 
 ## Status & Roadmap
+
 > Honesty over hype. ✅ done · 🚧 in progress · ⬜ planned
 
 - ✅ Frontend base + project tooling (lint, format)
@@ -87,19 +91,21 @@ Test pyramid: many unit · some integration · few E2E.
 
 ## Requirements Coverage
 
-| Job requirement | Where this project proves it |
-|---|---|
-| Node.js + TypeScript | End-to-end typed REST API |
-| Scalable distributed systems | Ingestion decoupled via queue + worker |
-| AWS | ECR · Fargate · RDS · SQS (LocalStack in dev) |
-| Testing (unit/integration/E2E) | Vitest (unit/integration) · Playwright (E2E) |
-| CI/CD | GitHub Actions (lint + test + deploy) |
-| _Nice to have:_ IaC / Observability | Terraform · OpenTelemetry (stretch) |
+| Job requirement                     | Where this project proves it                  |
+| ----------------------------------- | --------------------------------------------- |
+| Node.js + TypeScript                | End-to-end typed REST API                     |
+| Scalable distributed systems        | Ingestion decoupled via queue + worker        |
+| AWS                                 | ECR · Fargate · RDS · SQS (LocalStack in dev) |
+| Testing (unit/integration/E2E)      | Vitest (unit/integration) · Playwright (E2E)  |
+| CI/CD                               | GitHub Actions (lint + test + deploy)         |
+| _Nice to have:_ IaC / Observability | Terraform · OpenTelemetry (stretch)           |
 
 ## Technical Decisions
+
 Decisions are recorded in [`/docs/adr/`](docs/adr) — e.g. _why a queue instead of
 synchronous processing_, _why ingestion is separated from processing_.
 
 ---
+
 _Portfolio project by Luigi Cavalieri — software engineering, event-driven
 architecture, and AWS._
