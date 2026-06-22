@@ -20,48 +20,46 @@ import { server } from "../../../mocks/server";
  *  - Use `findBy*` (async) for anything that appears after the fetch resolves.
  */
 describe("MachineDetail", () => {
-  it("shows an idle hint when no machine is selected", () => {
-    // machineId = null → idle state, no request is made, no mock needed.
+  it("shows idle message when no machine is selected", () => {
     render(<MachineDetail machineId={null} />);
     expect(screen.getByText(/select a machine/i)).toBeInTheDocument();
   });
 
-  it("renders the machine and its readings from the (default) mock", async () => {
-    render(<MachineDetail machineId="m-x9" />);
-
-    // Loading shows first, synchronously.
-    expect(screen.getByRole("status")).toHaveTextContent(/loading/i);
-
-    // Then the data from the fixtures appears.
-    expect(await screen.findByText("John Deere 8R 410")).toBeInTheDocument();
-    expect(screen.getByText("12 %")).toBeInTheDocument(); // fuel_level formatted
-
-    // "Warning" shows up twice (flagged reading badge + anomaly entry), so use
-    // getAllByText — getByText throws when a query matches more than one node.
-    expect(screen.getAllByText("Warning").length).toBeGreaterThanOrEqual(1);
-  });
-
-  it("shows an error when the API fails (overridden mock)", async () => {
-    // Override just this endpoint to fail, for this test only.
+  it("shows error message when request fails", async () => {
     server.use(
       http.get("/machines/:id", () => new HttpResponse(null, { status: 500 })),
     );
-
-    render(<MachineDetail machineId="m-x9" />);
+    render(<MachineDetail machineId={"m-x9"} />);
 
     expect(
-      await screen.findByText(/could not load this machine/i),
+      await screen.findByText(/Could not load this machine/i),
     ).toBeInTheDocument();
   });
 
-  it("shows 'no open anomalies' when the mock returns an empty list", async () => {
-    // Override only the anomalies endpoint to return [].
+  it("shows 'no open anomalies' when mock returns empty list", async () => {
     server.use(
       http.get("/machines/:id/anomalies", () => HttpResponse.json([])),
+    );
+    render(<MachineDetail machineId={"m-x9"} />);
+    expect(await screen.findByText(/no open anomalies/i)).toBeInTheDocument();
+  });
+
+  it("shows 'no recent readings' when the mock returns an empty list", async () => {
+    server.use(
+      http.get("/machines/:id/readings/latest", () => HttpResponse.json([])),
     );
 
     render(<MachineDetail machineId="m-x9" />);
 
-    expect(await screen.findByText(/no open anomalies/i)).toBeInTheDocument();
+    expect(await screen.findByText(/No recent readings/i)).toBeInTheDocument();
+  });
+
+  it("Renders the machine and its reading from the mock", async () => {
+    render(<MachineDetail machineId="m-x9" />);
+    expect(screen.getByText(/loading telemetry/i)).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(/loading/i);
+    expect(await screen.findByText("John Deere 8R 410")).toBeInTheDocument();
+    expect(await screen.findByText("12 %")).toBeInTheDocument();
+    expect(await screen.findAllByText("Warning")).toHaveLength(2);
   });
 });
