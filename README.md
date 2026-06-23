@@ -4,7 +4,7 @@
 > (tractors, harvesters), with ingestion decoupled from processing through a queue —
 > to absorb traffic spikes and scale horizontally.
 
-![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/luigic2/event-driven-machine-telemetry-platform/actions/workflows/ci.yml/badge.svg)
 ![Coverage](https://img.shields.io/badge/coverage--%25-informational)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
@@ -48,7 +48,7 @@ flowchart LR
 **Prerequisites:** Node 20+, Docker.
 
 ```bash
-git clone https://github.com/OWNER/REPO.git
+git clone https://github.com/luigic2/event-driven-machine-telemetry-platform.git
 cd REPO
 cp .env.example .env
 npm install
