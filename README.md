@@ -12,6 +12,16 @@
 
 ---
 
+## Repository layout
+
+A monorepo with the frontend and backend as separate, self-contained apps:
+
+| Path      | What it is                                                          |
+| --------- | ------------------------------------------------------------------ |
+| `web/`    | React + Vite dashboard — client/demo of the read API               |
+| `server/` | Node + Fastify backend — ingestion API, queue and worker (planned) |
+| `docs/`   | Business-rules spec and architecture decisions                     |
+
 ## Problem
 
 A fleet of agricultural machines emits thousands of sensor readings (fuel,
@@ -45,15 +55,14 @@ flowchart LR
 
 ## Getting Started
 
-**Prerequisites:** Node 20+, Docker.
+**Prerequisites:** Node 20+ (Docker later, for the backend).
 
 ```bash
 git clone https://github.com/luigic2/event-driven-machine-telemetry-platform.git
-cd REPO
-cp .env.example .env
+cd event-driven-machine-telemetry-platform/web
+cp .env.example .env   # defaults to the in-app MSW mock
 npm install
-docker compose up -d
-npm run dev
+npm run dev            # dashboard with mock data — no backend needed
 ```
 
 ## Testing
